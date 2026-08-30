@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sai Rohith | AI Voice FAQ Assistant</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            obsidian: '#0b0f19',
+            surface: '#111827',
+            card: '#1e293b',
+            accentCyan: '#0ea5e9',
+            accentEmerald: '#10b981',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @keyframes pulse-ring {
+      0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(14, 165, 233, 0.7); }
+      70% { transform: scale(1.1); box-shadow: 0 0 0 20px rgba(14, 165, 233, 0); }
+      100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(14, 165, 233, 0); }
+    }
+    .recording-pulse {
+      animation: pulse-ring 1.5s infinite;
+    }
+  </style>
+</head>
+<body class="bg-obsidian text-slate-100 min-h-screen flex flex-col font-sans selection:bg-accentCyan selection:text-slate-950">
+
+  <!-- Header -->
+  <header class="border-b border-white/10 bg-surface/80 backdrop-blur-md sticky top-0 z-50">
+    <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-accentCyan to-indigo-600 flex items-center justify-center font-bold text-white shadow-lg shadow-cyan-500/20">
+          SR
+        </div>
+        <div>
+          <h1 class="font-bold text-base text-white leading-tight">Sai Rohith's AI Voice Assistant</h1>
+          <p class="text-xs text-slate-400">Voice-In, Voice-Out FAQ Bot with RAG & Gemini 3.6 Flash</p>
+        </div>
+      </div>
+      <div class="flex items-center space-x-3">
+        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1.5 animate-pulse"></span>
+          Live Assistant
+        </span>
+        <a href="https://sairohith1.vercel.app/" target="_blank" class="text-xs text-slate-400 hover:text-white px-3 py-1.5 rounded-lg border border-white/10 hover:border-white/30 transition">
+          <i class="fa-solid fa-arrow-up-right-from-square mr-1"></i> Portfolio
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="max-w-4xl mx-auto px-4 py-8 flex-1 flex flex-col w-full space-y-6">
+
+    <!-- Hero Card -->
+    <div class="bg-gradient-to-r from-surface to-[#161f33] border border-white/10 rounded-2xl p-6 shadow-xl">
+      <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+        <div>
+          <h2 class="text-xl font-bold text-white">Ask Anything by Voice 🎙️</h2>
+          <p class="text-sm text-slate-400 mt-1 max-w-xl">
+            Click the microphone and speak naturally. Ask about Sai's projects (<span class="text-cyan-400">Agentflow AI</span>, <span class="text-emerald-400">GreenOps</span>, <span class="text-indigo-400">Sahayak AI</span>), technical skills, or education.
+          </p>
+        </div>
+        <!-- Voice Selector -->
+        <div class="flex items-center space-x-2 bg-slate-900/60 p-2 rounded-xl border border-white/10">
+          <label class="text-xs text-slate-400 font-mono">Voice:</label>
+          <select id="voiceSelect" class="bg-slate-800 text-xs text-slate-200 rounded-lg px-2 py-1.5 border border-white/10 focus:outline-none focus:border-cyan-500">
+            <option value="en-US-ChristopherNeural">US Male Executive (Christopher)</option>
+            <option value="en-US-GuyNeural">US Male (Guy)</option>
+            <option value="en-US-AriaNeural">US Female (Aria)</option>
+            <option value="en-IN-PrabhatNeural">India Male (Prabhat)</option>
+            <option value="en-GB-RyanNeural">UK Male (Ryan)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Quick Suggestion Pills -->
+      <div class="mt-4 pt-4 border-t border-white/5 flex flex-wrap gap-2 items-center">
+        <span class="text-xs text-slate-500 font-mono mr-1">Try asking:</span>
+        <button onclick="askPreset('Tell me about your Agentflow AI project')" class="text-xs bg-slate-800/80 hover:bg-slate-700 text-slate-300 px-3 py-1 rounded-full border border-white/5 hover:border-cyan-500/50 transition">
+          🚀 Agentflow AI
+        </button>
+        <button onclick="askPreset('What did you build for GreenOps Code Auditor?')" class="text-xs bg-slate-800/80 hover:bg-slate-700 text-slate-300 px-3 py-1 rounded-full border border-white/5 hover:border-emerald-500/50 transition">
+          🌱 GreenOps Auditor
+        </button>
+        <button onclick="askPreset('What are your core programming languages and tech stack?')" class="text-xs bg-slate-800/80 hover:bg-slate-700 text-slate-300 px-3 py-1 rounded-full border border-white/5 hover:border-cyan-500/50 transition">
+          💻 Core Tech Stack
+        </button>
+        <button onclick="askPreset('How can I get in touch with Sai Rohith?')" class="text-xs bg-slate-800/80 hover:bg-slate-700 text-slate-300 px-3 py-1 rounded-full border border-white/5 hover:border-purple-500/50 transition">
+          📬 Contact Info
+        </button>
+      </div>
+    </div>
+
+    <!-- Voice Control Center -->
+    <div class="bg-surface border border-white/10 rounded-2xl p-8 flex flex-col items-center justify-center space-y-5 shadow-2xl relative overflow-hidden">
+      
+      <!-- Ambient Glow Behind Mic -->
+      <div id="micGlow" class="absolute w-40 h-40 bg-cyan-500/10 rounded-full blur-2xl pointer-events-none transition-all duration-300"></div>
+
+      <!-- Mic Button -->
+      <button id="recordBtn" onclick="toggleRecording()" class="relative z-10 w-24 h-24 rounded-full bg-gradient-to-tr from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white flex flex-col items-center justify-center shadow-xl shadow-cyan-500/25 transition-all transform active:scale-95 focus:outline-none">
+        <i id="recordIcon" class="fa-solid fa-microphone text-3xl"></i>
+        <span id="recordText" class="text-[10px] font-bold mt-1 tracking-wider uppercase">Record</span>
+      </button>
+
+      <!-- Status Indicator -->
+      <div id="statusArea" class="text-center max-w-md">
+        <p id="statusMsg" class="text-sm font-medium text-slate-300">Click the microphone and speak your question</p>
+        <p id="liveTranscript" class="text-xs font-mono text-cyan-300 mt-2 italic min-h-[20px]"></p>
+      </div>
+
+      <!-- Live Audio Player (Auto-plays response) -->
+      <div id="audioPlayerContainer" class="w-full max-w-md hidden pt-2">
+        <div class="bg-slate-900/90 rounded-xl p-3 border border-white/10 flex items-center space-x-3">
+          <i class="fa-solid fa-volume-high text-cyan-400 text-lg"></i>
+          <audio id="audioPlayer" controls class="w-full h-8" autoplay></audio>
+        </div>
+      </div>
+    </div>
+
+    <!-- Conversation Feed -->
+    <div id="conversationFeed" class="space-y-4">
+      <!-- Dynamic Messages will be injected here -->
+    </div>
+
+    <!-- Text Fallback Input -->
+    <div class="bg-surface border border-white/10 rounded-xl p-2 flex items-center gap-2">
+      <input type="text" id="textInput" placeholder="Or type your question here..." class="flex-1 bg-transparent px-4 py-2 text-sm text-slate-200 placeholder-slate-500 focus:outline-none" onkeydown="if(event.key==='Enter') sendTextQuestion()">
+      <button onclick="sendTextQuestion()" class="px-4 py-2 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white text-sm font-medium transition flex items-center gap-2">
+        <span>Send</span>
+        <i class="fa-solid fa-paper-plane text-xs"></i>
+      </button>
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-white/10 py-4 text-center text-xs text-slate-500">
+    Built with Python, FastAPI, Gemini 3.6 Flash, RAG & Edge-TTS · <a href="https://github.com/Sairohith-sde/voice_faq_bot" target="_blank" class="text-slate-400 hover:text-white underline">View on GitHub</a>
+  </footer>
+
+  <!-- Frontend JavaScript Logic with Web Speech API -->
+  <script>
+    let recognition = null;
+    let isRecording = false;
+    let recognizedText = "";
+
+    const recordBtn = document.getElementById('recordBtn');
+    const recordIcon = document.getElementById('recordIcon');
+    const recordText = document.getElementById('recordText');
+    const statusMsg = document.getElementById('statusMsg');
+    const liveTranscript = document.getElementById('liveTranscript');
+    const micGlow = document.getElementById('micGlow');
+    const audioPlayerContainer = document.getElementById('audioPlayerContainer');
+    const audioPlayer = document.getElementById('audioPlayer');
+    const conversationFeed = document.getElementById('conversationFeed');
+    const voiceSelect = document.getElementById('voiceSelect');
+
+    // Initialize Browser Web Speech Recognition
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    if (SpeechRecognition) {
+      recognition = new SpeechRecognition();
+      recognition.continuous = false;
+      recognition.interimResults = true;
+      recognition.lang = 'en-US';
+
+      recognition.onstart = () => {
+        isRecording = true;
+        recognizedText = "";
+        recordBtn.classList.remove('from-cyan-600', 'to-blue-600');
+        recordBtn.classList.add('from-rose-600', 'to-red-600', 'recording-pulse');
+        recordIcon.className = 'fa-solid fa-stop text-3xl';
+        recordText.innerText = 'Stop';
+        statusMsg.innerText = 'Listening... Speak your question clearly.';
+        liveTranscript.innerText = '';
+        micGlow.classList.add('bg-rose-500/30');
+      };
+
+      recognition.onresult = (event) => {
+        let interim = '';
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          if (event.results[i].isFinal) {
+            recognizedText += event.results[i][0].transcript;
+          } else {
+            interim += event.results[i][0].transcript;
+          }
+        }
+        liveTranscript.innerText = `"${recognizedText || interim}"`;
+      };
+
+      recognition.onerror = (event) => {
+        console.error("Speech Recognition Error:", event.error);
+        statusMsg.innerText = `Speech error: ${event.error}`;
+        resetRecordUI();
+      };
+
+      recognition.onend = async () => {
+        resetRecordUI();
+        const finalText = recognizedText.trim() || liveTranscript.innerText.replace(/"/g, '').trim();
+        if (finalText && finalText.length > 2) {
+          statusMsg.innerText = 'Synthesizing professional answer...';
+          await sendTextQuestion(finalText);
+        } else {
+          statusMsg.innerText = 'No speech detected. Click record to try again.';
+          liveTranscript.innerText = '';
+        }
+      };
+    } else {
+      console.warn("Web Speech API not supported in this browser.");
+    }
+
+    function toggleRecording() {
+      if (!recognition) {
+        alert("Your browser does not support live speech recognition. Please use Google Chrome or Microsoft Edge.");
+        return;
+      }
+
+      if (!isRecording) {
+        recognition.start();
+      } else {
+        recognition.stop();
+      }
+    }
+
+    function resetRecordUI() {
+      isRecording = false;
+      recordBtn.classList.remove('from-rose-600', 'to-red-600', 'recording-pulse');
+      recordBtn.classList.add('from-cyan-600', 'to-blue-600');
+      recordIcon.className = 'fa-solid fa-microphone text-3xl';
+      recordText.innerText = 'Record';
+      micGlow.classList.remove('bg-rose-500/30');
+    }
+
+    async function sendTextQuestion(text) {
+      const input = document.getElementById('textInput');
+      const question = text || input.value.trim();
+      if (!question) return;
+
+      if (!text) input.value = '';
+      statusMsg.innerText = 'Reasoning with Gemini 3.6 Flash & RAG...';
+      liveTranscript.innerText = '';
+
+      try {
+        const response = await fetch('/api/ask-text', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ question: question, voice: voiceSelect.value })
+        });
+
+        const data = await response.json();
+        if (data.error) {
+          statusMsg.innerText = `Error: ${data.error}`;
+          return;
+        }
+
+        renderExchange(data);
+        statusMsg.innerText = 'Spoken answer ready! Click mic to ask another question.';
+
+        if (data.audio_url) {
+          audioPlayer.src = data.audio_url + '?t=' + Date.now();
+          audioPlayerContainer.classList.remove('hidden');
+          audioPlayer.play().catch(e => console.log('Autoplay blocked:', e));
+        }
+
+      } catch (err) {
+        console.error(err);
+        statusMsg.innerText = 'Error processing question.';
+      }
+    }
+
+    function askPreset(text) {
+      sendTextQuestion(text);
+    }
+
+    function renderExchange(data) {
+      const card = document.createElement('div');
+      card.className = 'bg-surface border border-white/10 rounded-xl p-5 space-y-3 shadow-lg transition hover:border-white/20';
+
+      card.innerHTML = `
+        <!-- User Query -->
+        <div class="flex items-start space-x-3">
+          <div class="w-7 h-7 rounded-lg bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-xs mt-0.5">
+            <i class="fa-solid fa-user"></i>
+          </div>
+          <div class="flex-1">
+            <span class="text-xs font-mono text-cyan-400">You asked (Voice Transcript):</span>
+            <p class="text-sm font-semibold text-white mt-0.5">"${data.transcript}"</p>
+          </div>
+        </div>
+
+        <!-- AI Voice Response -->
+        <div class="flex items-start space-x-3 pt-2 border-t border-white/5">
+          <div class="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xs mt-0.5">
+            <i class="fa-solid fa-robot"></i>
+          </div>
+          <div class="flex-1">
+            <span class="text-xs font-mono text-emerald-400">AI Spoken Answer (Gemini 3.6 Flash):</span>
+            <p class="text-sm text-slate-200 mt-0.5 leading-relaxed">${data.answer}</p>
+          </div>
+        </div>
+
+        <!-- RAG Context Accordion -->
+        ${data.retrieved_context && data.retrieved_context.length > 0 ? `
+          <details class="text-xs text-slate-500 pt-1 border-t border-white/5 cursor-pointer">
+            <summary class="hover:text-slate-400 font-mono text-[11px]">🔍 View RAG Matched Knowledge Source (${data.retrieved_context.length} chunks)</summary>
+            <div class="mt-2 p-2.5 rounded bg-slate-900/90 text-slate-400 font-mono text-[11px] leading-relaxed border border-white/5">
+              ${data.retrieved_context.join('<br><br>')}
+            </div>
+          </details>
+        ` : ''}
+      `;
+
+      conversationFeed.prepend(card);
+    }
+  </script>
+</body>
+</html>
