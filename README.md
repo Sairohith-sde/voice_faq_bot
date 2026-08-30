@@ -1,4 +1,4 @@
-﻿# 🎙️ Sai Rohith's AI Voice FAQ Assistant
+# 🎙️ Sai Rohith's AI Voice FAQ Assistant
 
 An interactive, low-latency, voice-first AI assistant representing **Sai Rohith's** software engineering portfolio. Engineered with a **WhisperFlow-style audio pipeline**, **Bi-gram RAG retrieval**, **Google Gemini multi-model reasoning**, and **Microsoft Edge Neural Text-to-Speech**.
 
