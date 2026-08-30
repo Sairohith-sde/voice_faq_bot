@@ -42,10 +42,12 @@ class TextQueryRequest(BaseModel):
     history: Optional[List[Dict[str, str]]] = []
 
 
-@app.get("/", response_class=HTMLResponse)
-async def serve_ui(request: Request):
+@app.api_route("/", methods=["GET", "HEAD"], response_class=HTMLResponse)
+async def serve_ui():
     """Renders the main interactive Voice FAQ UI."""
-    return templates.TemplateResponse("index.html", {"request": request})
+    html_file = os.path.join(TEMPLATES_DIR, "index.html")
+    with open(html_file, "r", encoding="utf-8") as f:
+        return HTMLResponse(content=f.read())
 
 
 @app.post("/api/ask-text")
