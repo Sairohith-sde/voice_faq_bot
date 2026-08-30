@@ -49,7 +49,7 @@
         </div>
         <div>
           <h1 class="font-bold text-base text-white leading-tight">Sai Rohith's AI Voice Assistant</h1>
-          <p class="text-xs text-slate-400">Voice-In, Voice-Out FAQ Bot with RAG & Gemini 3.6 Flash</p>
+          <p class="text-xs text-slate-400">Multi-Turn Memory · Canvas Waveform · Gemini Reasoning</p>
         </div>
       </div>
       <div class="flex items-center space-x-3">
@@ -73,7 +73,7 @@
         <div>
           <h2 class="text-xl font-bold text-white">Ask Anything by Voice 🎙️</h2>
           <p class="text-sm text-slate-400 mt-1 max-w-xl">
-            Click the microphone and speak naturally. Ask about Sai's projects (<span class="text-cyan-400">Agentflow AI</span>, <span class="text-emerald-400">GreenOps</span>, <span class="text-indigo-400">Sahayak AI</span>), technical skills, or education.
+            Supports multi-turn follow-ups (e.g. ask about <span class="text-cyan-400">Agentflow AI</span>, then ask <span class="text-emerald-400">"What database did you use for it?"</span>).
           </p>
         </div>
         <!-- Voice Selector -->
@@ -107,13 +107,16 @@
       </div>
     </div>
 
-    <!-- Voice Control Center -->
+    <!-- Voice Control Center & Waveform Canvas -->
     <div class="bg-surface border border-white/10 rounded-2xl p-8 flex flex-col items-center justify-center space-y-5 shadow-2xl relative overflow-hidden">
       
+      <!-- Real-Time Audio Spectrum Canvas -->
+      <canvas id="waveformCanvas" width="500" height="80" class="w-full max-w-md h-20 rounded-xl bg-slate-900/80 border border-white/5"></canvas>
+
       <!-- Ambient Glow Behind Mic -->
       <div id="micGlow" class="absolute w-40 h-40 bg-cyan-500/10 rounded-full blur-2xl pointer-events-none transition-all duration-300"></div>
 
-      <!-- Mic Button -->
+      <!-- Mic Button with Barge-In -->
       <button id="recordBtn" onclick="toggleRecording()" class="relative z-10 w-24 h-24 rounded-full bg-gradient-to-tr from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white flex flex-col items-center justify-center shadow-xl shadow-cyan-500/25 transition-all transform active:scale-95 focus:outline-none">
         <i id="recordIcon" class="fa-solid fa-microphone text-3xl"></i>
         <span id="recordText" class="text-[10px] font-bold mt-1 tracking-wider uppercase">Record</span>
@@ -128,7 +131,7 @@
       <!-- Live Audio Player (Auto-plays response) -->
       <div id="audioPlayerContainer" class="w-full max-w-md hidden pt-2">
         <div class="bg-slate-900/90 rounded-xl p-3 border border-white/10 flex items-center space-x-3">
-          <i class="fa-solid fa-volume-high text-cyan-400 text-lg"></i>
+          <i class="fa-solid fa-volume-high text-cyan-400 text-lg animate-pulse"></i>
           <audio id="audioPlayer" controls class="w-full h-8" autoplay></audio>
         </div>
       </div>
@@ -152,15 +155,24 @@
 
   <!-- Footer -->
   <footer class="border-t border-white/10 py-4 text-center text-xs text-slate-500">
-    Built with Python, FastAPI, Gemini 3.6 Flash, RAG & Edge-TTS · <a href="https://github.com/Sairohith-sde/voice_faq_bot" target="_blank" class="text-slate-400 hover:text-white underline">View on GitHub</a>
+    Built with Python, FastAPI, Gemini, RAG & Edge-TTS · <a href="https://github.com/Sairohith-sde/voice_faq_bot" target="_blank" class="text-slate-400 hover:text-white underline">View on GitHub</a>
   </footer>
 
-  <!-- Frontend JavaScript Logic with Web Speech API -->
+  <!-- Frontend Logic: Canvas Visualizer, Earcons, Multi-Turn Memory & Barge-In -->
   <script>
     let recognition = null;
     let isRecording = false;
     let recognizedText = "";
+    let micStream = null;
+    let conversationHistory = []; // Multi-Turn Conversation Memory
 
+    // Web Audio API & Canvas Visualizer Setup
+    let audioCtx = null;
+    let analyser = null;
+    let canvasCtx = null;
+    let visualizerAnimationId = null;
+
+    const canvas = document.getElementById('waveformCanvas');
     const recordBtn = document.getElementById('recordBtn');
     const recordIcon = document.getElementById('recordIcon');
     const recordText = document.getElementById('recordText');
@@ -172,7 +184,93 @@
     const conversationFeed = document.getElementById('conversationFeed');
     const voiceSelect = document.getElementById('voiceSelect');
 
-    // Initialize Browser Web Speech Recognition
+    // Synthesized Sound Effects (Earcons)
+    function playChime(type) {
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        if (type === 'start') {
+          osc.frequency.setValueAtTime(440, ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.15);
+          gain.gain.setValueAtTime(0.08, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.2);
+        } else if (type === 'ready') {
+          osc.frequency.setValueAtTime(659.25, ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.2);
+          gain.gain.setValueAtTime(0.08, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.25);
+        }
+      } catch (e) {}
+    }
+
+    // Canvas Waveform Animation Loop
+    function initVisualizer() {
+      if (!canvasCtx) {
+        canvasCtx = canvas.getContext('2d');
+      }
+      drawIdleWave();
+    }
+
+    function drawIdleWave() {
+      if (!canvasCtx) return;
+      canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
+      canvasCtx.beginPath();
+      canvasCtx.strokeStyle = 'rgba(14, 165, 233, 0.2)';
+      canvasCtx.lineWidth = 2;
+      const mid = canvas.height / 2;
+      canvasCtx.moveTo(0, mid);
+      canvasCtx.lineTo(canvas.width, mid);
+      canvasCtx.stroke();
+    }
+
+    function startLiveWaveform(sourceNode, isAssistant = false) {
+      if (!canvasCtx) canvasCtx = canvas.getContext('2d');
+      const bufferLength = analyser.frequencyBinCount;
+      const dataArray = new Uint8Array(bufferLength);
+
+      function draw() {
+        visualizerAnimationId = requestAnimationFrame(draw);
+        analyser.getByteFrequencyData(dataArray);
+
+        canvasCtx.fillStyle = 'rgba(11, 15, 25, 0.3)';
+        canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
+
+        const barWidth = (canvas.width / bufferLength) * 2.5;
+        let x = 0;
+
+        for (let i = 0; i < bufferLength; i++) {
+          const barHeight = (dataArray[i] / 255) * canvas.height * 0.9;
+
+          if (isAssistant) {
+            canvasCtx.fillStyle = `rgb(${16 + barHeight}, ${185}, ${129})`; // Emerald glow for AI
+          } else {
+            canvasCtx.fillStyle = `rgb(${14}, ${165 + barHeight / 2}, ${233})`; // Cyan glow for User
+          }
+
+          canvasCtx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
+          x += barWidth + 2;
+        }
+      }
+      draw();
+    }
+
+    function stopLiveWaveform() {
+      if (visualizerAnimationId) {
+        cancelAnimationFrame(visualizerAnimationId);
+        visualizerAnimationId = null;
+      }
+      drawIdleWave();
+    }
+
+    // Initialize Web Speech Recognition
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
     if (SpeechRecognition) {
@@ -184,11 +282,19 @@
       recognition.onstart = () => {
         isRecording = true;
         recognizedText = "";
+        playChime('start');
+
+        // Barge-In: Halt any playing AI audio immediately
+        if (!audioPlayer.paused) {
+          audioPlayer.pause();
+          audioPlayer.currentTime = 0;
+        }
+
         recordBtn.classList.remove('from-cyan-600', 'to-blue-600');
         recordBtn.classList.add('from-rose-600', 'to-red-600', 'recording-pulse');
         recordIcon.className = 'fa-solid fa-stop text-3xl';
         recordText.innerText = 'Stop';
-        statusMsg.innerText = 'Listening... Speak your question clearly.';
+        statusMsg.innerText = 'Listening with noise cancellation... Speak clearly.';
         liveTranscript.innerText = '';
         micGlow.classList.add('bg-rose-500/30');
       };
@@ -206,7 +312,7 @@
       };
 
       recognition.onerror = (event) => {
-        console.error("Speech Recognition Error:", event.error);
+        console.error("Speech Error:", event.error);
         statusMsg.innerText = `Speech error: ${event.error}`;
         resetRecordUI();
       };
@@ -215,32 +321,52 @@
         resetRecordUI();
         const finalText = recognizedText.trim() || liveTranscript.innerText.replace(/"/g, '').trim();
         if (finalText && finalText.length > 2) {
-          statusMsg.innerText = 'Synthesizing professional answer...';
+          statusMsg.innerText = 'Synthesizing articulate explanation...';
           await sendTextQuestion(finalText);
         } else {
-          statusMsg.innerText = 'No speech detected. Click record to try again.';
+          statusMsg.innerText = 'No clear speech detected. Click record to try again.';
           liveTranscript.innerText = '';
         }
       };
-    } else {
-      console.warn("Web Speech API not supported in this browser.");
     }
 
-    function toggleRecording() {
+    async function toggleRecording() {
       if (!recognition) {
         alert("Your browser does not support live speech recognition. Please use Google Chrome or Microsoft Edge.");
         return;
       }
 
       if (!isRecording) {
-        recognition.start();
+        try {
+          micStream = await navigator.mediaDevices.getUserMedia({
+            audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true, channelCount: 1 }
+          });
+
+          // Connect Web Audio API Analyser for Live Waveform
+          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          analyser = audioCtx.createAnalyser();
+          analyser.fftSize = 64;
+          const source = audioCtx.createMediaStreamSource(micStream);
+          source.connect(analyser);
+
+          startLiveWaveform(source, false);
+          recognition.start();
+        } catch (err) {
+          console.error("Mic access error:", err);
+          statusMsg.innerText = "Microphone access denied.";
+        }
       } else {
         recognition.stop();
+        stopLiveWaveform();
+        if (micStream) {
+          micStream.getTracks().forEach(t => t.stop());
+        }
       }
     }
 
     function resetRecordUI() {
       isRecording = false;
+      stopLiveWaveform();
       recordBtn.classList.remove('from-rose-600', 'to-red-600', 'recording-pulse');
       recordBtn.classList.add('from-cyan-600', 'to-blue-600');
       recordIcon.className = 'fa-solid fa-microphone text-3xl';
@@ -254,14 +380,24 @@
       if (!question) return;
 
       if (!text) input.value = '';
-      statusMsg.innerText = 'Reasoning with Gemini 3.6 Flash & RAG...';
+      statusMsg.innerText = 'Reasoning with Gemini & RAG...';
       liveTranscript.innerText = '';
+
+      // Barge-in: Halt playing audio
+      if (!audioPlayer.paused) {
+        audioPlayer.pause();
+        audioPlayer.currentTime = 0;
+      }
 
       try {
         const response = await fetch('/api/ask-text', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ question: question, voice: voiceSelect.value })
+          body: JSON.stringify({
+            question: question,
+            voice: voiceSelect.value,
+            history: conversationHistory
+          })
         });
 
         const data = await response.json();
@@ -270,8 +406,13 @@
           return;
         }
 
+        // Update Multi-Turn Conversation Memory
+        conversationHistory.push({ role: 'user', content: question });
+        conversationHistory.push({ role: 'assistant', content: data.answer });
+
         renderExchange(data);
-        statusMsg.innerText = 'Spoken answer ready! Click mic to ask another question.';
+        playChime('ready');
+        statusMsg.innerText = 'Spoken answer ready! Click mic to ask a follow-up question.';
 
         if (data.audio_url) {
           audioPlayer.src = data.audio_url + '?t=' + Date.now();
@@ -300,7 +441,14 @@
             <i class="fa-solid fa-user"></i>
           </div>
           <div class="flex-1">
-            <span class="text-xs font-mono text-cyan-400">You asked (Voice Transcript):</span>
+            <div class="flex items-center space-x-2">
+              <span class="text-xs font-mono text-cyan-400">You asked (Spoken):</span>
+              ${data.cleaned_query && data.cleaned_query !== data.transcript ? `
+                <span class="text-[10px] bg-cyan-500/10 text-cyan-300 px-1.5 py-0.5 rounded font-mono border border-cyan-500/20">
+                  <i class="fa-solid fa-wand-magic-sparkles mr-1"></i>Cleaned: "${data.cleaned_query}"
+                </span>
+              ` : ''}
+            </div>
             <p class="text-sm font-semibold text-white mt-0.5">"${data.transcript}"</p>
           </div>
         </div>
@@ -311,7 +459,7 @@
             <i class="fa-solid fa-robot"></i>
           </div>
           <div class="flex-1">
-            <span class="text-xs font-mono text-emerald-400">AI Spoken Answer (Gemini 3.6 Flash):</span>
+            <span class="text-xs font-mono text-emerald-400">AI Spoken Answer (Gemini):</span>
             <p class="text-sm text-slate-200 mt-0.5 leading-relaxed">${data.answer}</p>
           </div>
         </div>
@@ -329,6 +477,9 @@
 
       conversationFeed.prepend(card);
     }
+
+    // Initialize Visualizer on Page Load
+    window.addEventListener('DOMContentLoaded', initVisualizer);
   </script>
 </body>
 </html>

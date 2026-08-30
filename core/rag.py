@@ -8,19 +8,23 @@ import numpy as np
 
 class KnowledgeBase:
     """
-    RAG Knowledge Base for indexing Sai Rohith's portfolio data
-    and retrieving relevant context chunks for any spoken question.
+    High-Precision Bi-gram RAG Knowledge Base for Sai Rohith's Portfolio.
     """
     def __init__(self, data_path: str = "data/portfolio_faq.json"):
         self.data_path = data_path
         self.raw_data: Dict[str, Any] = {}
         self.chunks: List[Dict[str, str]] = []
-        self.vectorizer = TfidfVectorizer(stop_words="english")
+        # Bi-gram vectorizer with sublinear term frequency scaling
+        self.vectorizer = TfidfVectorizer(
+            ngram_range=(1, 2),
+            sublinear_tf=True,
+            stop_words="english"
+        )
         self.tfidf_matrix = None
         self.load_and_index()
 
     def load_and_index(self):
-        """Loads the JSON data and converts each section into searchable chunks."""
+        """Loads portfolio FAQ JSON data and converts sections into searchable knowledge chunks."""
         if not os.path.exists(self.data_path):
             raise FileNotFoundError(f"Data file not found at: {self.data_path}")
 
@@ -46,7 +50,7 @@ class KnowledgeBase:
             e = self.raw_data["education"]
             courses = ", ".join(e.get("coursework", []))
             edu_text = (
-                f"Education: Pursuing {e.get('degree')} at {e.get('institution')} ({e.get('duration')}), "
+                f"Education Background: Pursuing {e.get('degree')} at {e.get('institution')} ({e.get('duration')}), "
                 f"located in {e.get('location')}. Key Coursework: {courses}."
             )
             self.chunks.append({"category": "education", "content": edu_text})
@@ -55,8 +59,8 @@ class KnowledgeBase:
         if "skills" in self.raw_data:
             s = self.raw_data["skills"]
             skills_text = (
-                f"Technical Skills and Proficiencies: "
-                f"Languages: {', '.join(s.get('languages', []))}. "
+                f"Technical Skills, Developer Stack and Proficiencies: "
+                f"Programming Languages: {', '.join(s.get('languages', []))}. "
                 f"AI, ML & LLMs: {', '.join(s.get('ai_and_ml', []))}. "
                 f"Backend & APIs: {', '.join(s.get('backend_and_apis', []))}. "
                 f"Databases & Tools: {', '.join(s.get('databases_and_tools', []))}."
@@ -108,45 +112,26 @@ class KnowledgeBase:
 
     def retrieve(self, query: str, top_k: int = 2) -> List[str]:
         """
-        Takes a user question and returns the top_k most relevant knowledge chunks.
+        Takes a query and returns the top_k most relevant knowledge chunks.
         """
         if not self.chunks or self.tfidf_matrix is None:
             return []
 
-        # Convert question into vector representation
         query_vec = self.vectorizer.transform([query])
-        
-        # Calculate similarity score against all chunks
         similarities = cosine_similarity(query_vec, self.tfidf_matrix).flatten()
-        
-        # Rank by highest similarity score
         top_indices = np.argsort(similarities)[::-1][:top_k]
 
-        results = []
-        for idx in top_indices:
-            if similarities[idx] > 0.05:
-                results.append(self.chunks[idx]["content"])
-
-        # Fallback to general profile if query is too generic
+        results = [self.chunks[idx]["content"] for idx in top_indices if similarities[idx] > 0.0]
         if not results:
             results = [self.chunks[0]["content"]]
 
         return results
 
 
-# Self-test when run directly
+# Self-test
 if __name__ == "__main__":
     kb = KnowledgeBase()
-    test_queries = [
-        "Tell me about Agentflow AI",
-        "What are Sai Rohith's programming languages?",
-        "What did Sai do in Sign Language Translation?"
-    ]
-    
-    print("\n================ RAG RETRIEVAL TEST ================")
-    for query in test_queries:
-        print(f"\n🔍 Question: '{query}'")
-        retrieved = kb.retrieve(query, top_k=1)
-        for i, chunk in enumerate(retrieved, 1):
-            print(f"👉 Matched Knowledge Chunk:\n{chunk}")
-    print("\n====================================================")
+    print("Testing Bi-Gram RAG Retrieval:")
+    for test_q in ["tell me about greenops auditor", "what is agentflow ai", "sign language pipeline"]:
+        res = kb.retrieve(test_q, top_k=1)
+        print(f"\nQ: {test_q}\nMatch: {res[0][:120]}...")

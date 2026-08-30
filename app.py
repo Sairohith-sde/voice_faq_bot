@@ -1,23 +1,22 @@
 import os
 import sys
+from typing import List, Dict, Optional
 
-# Ensure current directory is always in Python's search path
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 if BASE_DIR not in sys.path:
     sys.path.insert(0, BASE_DIR)
 
 import uvicorn
-from fastapi import FastAPI, UploadFile, File, Form, Request
+from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, FileResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 
+from core.cleaner import TranscriptCleaner
 from core.rag import KnowledgeBase
 from core.llm import VoiceReasoningEngine
 from core.tts import TextToSpeechEngine
-from core.stt import SpeechToTextEngine
 
-# Initialize FastAPI App
 app = FastAPI(title="Sai Rohith's AI Voice FAQ Assistant")
 
 # Setup directories & templates
@@ -29,7 +28,6 @@ templates = Jinja2Templates(directory=TEMPLATES_DIR)
 
 # Initialize AI Engines
 kb = KnowledgeBase(data_path=os.path.join(BASE_DIR, "data", "portfolio_faq.json"))
-stt = SpeechToTextEngine()
 llm = VoiceReasoningEngine()
 tts = TextToSpeechEngine(output_dir=TEMP_AUDIO_DIR)
 
@@ -37,6 +35,7 @@ tts = TextToSpeechEngine(output_dir=TEMP_AUDIO_DIR)
 class TextQueryRequest(BaseModel):
     question: str
     voice: str = "en-US-ChristopherNeural"
+    history: Optional[List[Dict[str, str]]] = []
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -45,62 +44,40 @@ async def serve_ui(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
 
-@app.post("/api/ask-voice")
-async def handle_voice_query(
-    audio_file: UploadFile = File(...),
-    voice: str = Form("en-US-ChristopherNeural")
-):
-    """
-    Complete Voice-In, Voice-Out Pipeline:
-    1. Transcribe audio recording bytes with Gemini 3.6 Flash STT
-    2. Retrieve relevant portfolio facts with RAG
-    3. Generate natural, detailed spoken answer with Gemini 3.6 Flash LLM
-    4. Synthesize spoken audio with Edge-TTS
-    """
-    try:
-        audio_bytes = await audio_file.read()
-        if not audio_bytes:
-            return JSONResponse({"error": "Empty audio recording received"}, status_code=400)
-
-        # 1. Speech-to-Text (STT) with clean MIME type
-        transcript = stt.transcribe(audio_bytes, mime_type=audio_file.content_type)
-        if not transcript:
-            return JSONResponse({"error": "Could not understand audio speech."}, status_code=400)
-
-        # 2. RAG Retrieval (Get top 2 matching knowledge chunks)
-        context_chunks = kb.retrieve(transcript, top_k=2)
-
-        # 3. LLM Voice Reasoning
-        answer = llm.generate_spoken_response(transcript, context_chunks)
-
-        # 4. Text-to-Speech (TTS)
-        tts.voice = voice
-        await tts.synthesize_async(answer, filename="response.mp3")
-
-        return JSONResponse({
-            "transcript": transcript,
-            "answer": answer,
-            "retrieved_context": context_chunks,
-            "audio_url": "/api/audio"
-        })
-
-    except Exception as e:
-        return JSONResponse({"error": str(e)}, status_code=500)
-
-
 @app.post("/api/ask-text")
 async def handle_text_query(data: TextQueryRequest):
-    """Text query route with voice audio output."""
+    """
+    Full Multi-Turn Voice Pipeline:
+    1. Filter conversational fillers & stutters
+    2. Retrieve accurate portfolio facts with Bi-gram RAG
+    3. Reason with Gemini taking conversation history into account
+    4. Synthesize natural neural speech
+    """
     try:
-        transcript = data.question.strip()
-        context_chunks = kb.retrieve(transcript, top_k=2)
-        answer = llm.generate_spoken_response(transcript, context_chunks)
+        raw_question = data.question.strip()
+        if not raw_question:
+            return JSONResponse({"error": "Question cannot be empty"}, status_code=400)
 
+        # Step 1: Clean Transcript & Strip Fillers
+        cleaned_query = TranscriptCleaner.clean(raw_question)
+
+        # Step 2: High-Precision RAG Retrieval
+        context_chunks = kb.retrieve(cleaned_query, top_k=2)
+
+        # Step 3: Multi-Turn Executive LLM Reasoning
+        answer = llm.generate_spoken_response(
+            question=raw_question,
+            context_chunks=context_chunks,
+            history=data.history
+        )
+
+        # Step 4: Neural TTS Audio Synthesis
         tts.voice = data.voice
         await tts.synthesize_async(answer, filename="response.mp3")
 
         return JSONResponse({
-            "transcript": transcript,
+            "transcript": raw_question,
+            "cleaned_query": cleaned_query,
             "answer": answer,
             "retrieved_context": context_chunks,
             "audio_url": "/api/audio"
@@ -119,5 +96,5 @@ async def stream_audio_response():
 
 
 if __name__ == "__main__":
-    print(f"\n🚀 Starting Sai Rohith's AI Voice FAQ Assistant on http://127.0.0.1:8000 ...")
+    print("\n🚀 Starting Multi-Turn WhisperFlow Voice Assistant on http://127.0.0.1:8000 ...")
     uvicorn.run("app:app", host="127.0.0.1", port=8000, reload=True)
