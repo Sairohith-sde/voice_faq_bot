@@ -1,0 +1,136 @@
+{
+  "personal": {
+    "name": "Sai Rohith",
+    "fullName": "Sai Rohith Pothuganti",
+    "title": "Full-Stack SDE & Applied AI Engineer",
+    "status": "Available for SDE & AI Internships / Full-Time Roles",
+    "location": "Amaravati, India",
+    "email": "rohithsai523@gmail.com",
+    "github": "https://github.com/Sairohith-sde",
+    "linkedin": "https://linkedin.com/in/sai-rohith",
+    "portfolio_url": "https://sairohith1.vercel.app/",
+    "bio": "B.Tech Computer Science Engineering student at VIT-AP (2024 - 2028) building full-stack applications and applied AI pipelines. Experienced in scalable backend architectures, autonomous multi-agent systems, developer tooling, and computer vision."
+  },
+  "education": {
+    "institution": "VIT-AP University",
+    "degree": "B.Tech in Computer Science and Engineering",
+    "duration": "2024 - 2028",
+    "location": "Amaravati, India",
+    "coursework": [
+      "Data Structures & Algorithms",
+      "Database Management Systems",
+      "Computer Networks & Communications",
+      "Cloud Computing",
+      "Python Programming",
+      "Object-Oriented Programming (OOP)"
+    ]
+  },
+  "skills": {
+    "languages": ["Python", "C++", "JavaScript (ES6+)", "TypeScript", "SQL", "HTML5 / CSS3"],
+    "ai_and_ml": [
+      "Google GenAI (Gemini SDK)",
+      "Autonomous Multi-Agent Architectures",
+      "PyTorch",
+      "Computer Vision (MediaPipe, ST-GCN)",
+      "Ollama (Local LLMs)",
+      "Pydantic Schema Validation",
+      "Prompt-to-Workflow Synthesis",
+      "RAG & Vector Search"
+    ],
+    "backend_and_apis": [
+      "FastAPI",
+      "Node.js & Express.js",
+      "REST API Architecture",
+      "Server-Sent Events (SSE)",
+      "Socket.IO / WebSockets",
+      "JWT Authentication & RBAC"
+    ],
+    "databases_and_tools": [
+      "MongoDB (Mongoose)",
+      "React 19 & Next.js 14/15",
+      "Tailwind CSS",
+      "Git & GitHub Workflows",
+      "Vercel & Render Deployment",
+      "Linux / Windows Scripting"
+    ]
+  },
+  "flagship_case_study": {
+    "title": "Sign Language Recognition & Translation",
+    "tagline": "End-to-end Computer Vision & Sequence-to-Sequence NLP Pipeline",
+    "status": "7/7 Test Suites Passed",
+    "description": "Continuous sign language translation capturing spatial-temporal hand/body movements and translating non-verbal gloss sequences into fluent natural English.",
+    "architecture": "MediaPipe spatial landmark perception -> ST-GCN spatial-temporal graph convolution -> Multi-Head Self-Attention Transformer -> CTC Loss prefix beam search -> T5 Generative translation."
+  },
+  "projects": [
+    {
+      "id": "agentflow",
+      "title": "Agentflow AI",
+      "subtitle": "Autonomous Multi-Agent Automation Platform",
+      "description": "Distributed AI workflow automation platform featuring an interactive React Flow visual canvas, 3-tier natural language prompt synthesizer, AES-256 encrypted credential vault, and an autonomous 5-Agent cooperative execution and self-healing engine.",
+      "tech_stack": ["Next.js 15", "React 19", "Node.js", "Express", "MongoDB", "Socket.IO", "React Flow", "Redis"],
+      "github": "https://github.com/Sairohith-sde/Agentflow_AI",
+      "live_demo": "https://agentflow-client.vercel.app/",
+      "highlights": "5-Agent cooperative loop with automatic self-healing routines and real-time step streaming over WebSockets."
+    },
+    {
+      "id": "greenops",
+      "title": "GreenOps Code Auditor",
+      "subtitle": "AI-Powered Algorithmic Efficiency Analyzer",
+      "description": "Static code analysis platform that deterministically parses source code in Python, Java, C, and C++, computes Big O time complexity, and assigns a Carbon Penalty Score to refactor CPU-wasting loops before cloud deployment.",
+      "tech_stack": ["FastAPI", "Next.js 14", "TypeScript", "Python", "Google GenAI (Gemini)", "Pydantic"],
+      "github": "https://github.com/Sairohith-sde/greenops-code-auditor",
+      "live_demo": "https://greenops-code-auditor-eight.vercel.app/",
+      "highlights": "Idea2Impact 2026 Nominee. Evaluates algorithmic complexity from O(1) to O(N!) with Pydantic JSON schema validation."
+    },
+    {
+      "id": "sahayak",
+      "title": "Sahayak AI",
+      "subtitle": "NHM Clinical Decision-Support & Auto-Reporting Portal",
+      "description": "Clinical decision-support system built in compliance with India National Health Mission (NHM 2026). Converts voice-recorded field observations into structured medical reports with real-time SSE escalation tracing.",
+      "tech_stack": ["React", "Node.js", "Express", "MongoDB", "Google Gemini", "Ollama", "SSE", "JWT"],
+      "github": "https://github.com/Sairohith-sde/sahayak-ai",
+      "live_demo": "https://sahayak-portal-nhm.vercel.app/login",
+      "highlights": "Dual-engine AI pipeline using Gemini API for cloud and local Ollama for low-connectivity rural health centers."
+    },
+    {
+      "id": "studentpaste",
+      "title": "StudentPaste",
+      "subtitle": "Cross-Device Clipboard & Keystroke Automator",
+      "description": "Cross-device utility that synchronizes text and code from mobile to desktop, typing hands-free with hardware keystroke simulation and anti-indentation shield to bypass restrictive lab environments.",
+      "tech_stack": ["TypeScript", "Python", "WebSockets", "OS Automation"],
+      "github": "https://github.com/Sairohith-sde/studentpaste",
+      "live_demo": "https://studentpaste.app",
+      "highlights": "Hardware keystroke typing with microsecond delay tuning across Windows & macOS."
+    }
+  ],
+  "accolades": [
+    {
+      "title": "Global Industry-Academia Cohort Nomination",
+      "organization": "Nominated by VIT-AP University",
+      "details": "Selected across 30+ leading universities for demonstrated excellence in AI, Cloud, 5G, IoT, and Automation."
+    },
+    {
+      "title": "Idea2Impact 2026 Hackathon Submissions",
+      "organization": "Idea2Impact",
+      "details": "Architected and shipped GreenOps Code Auditor and Sahayak AI under Spec-Driven Development."
+    }
+  ],
+  "faqs": [
+    {
+      "question": "What are Sai Rohith's core technical strengths?",
+      "answer": "Sai Rohith specializes in Autonomous Multi-Agent architectures, Full-Stack scalable systems with FastAPI and Next.js, Applied AI/ML pipelines with Gemini and PyTorch, and developer tooling."
+    },
+    {
+      "question": "Is Sai Rohith open to internships or full-time roles?",
+      "answer": "Yes, Sai Rohith is actively open to Software Development Engineer (SDE) and AI Engineering internships and full-time roles."
+    },
+    {
+      "question": "How can I contact Sai Rohith for opportunities?",
+      "answer": "You can reach Sai Rohith by email at rohithsai523@gmail.com, on GitHub at github.com/Sairohith-sde, or on LinkedIn at linkedin.com/in/sai-rohith."
+    },
+    {
+      "question": "What is Sai Rohith's educational background?",
+      "answer": "Sai Rohith is pursuing a B.Tech in Computer Science and Engineering at VIT-AP University (2024 - 2028), focusing on Data Structures, Algorithms, Cloud Computing, and AI."
+    }
+  ]
+}
