@@ -19,8 +19,12 @@ from core.tts import TextToSpeechEngine
 
 app = FastAPI(title="Sai Rohith's AI Voice FAQ Assistant")
 
-# Setup directories & templates
-TEMP_AUDIO_DIR = os.path.join(BASE_DIR, "temp_audio")
+# Cloud-compatible temp audio directory (uses /tmp on Linux cloud servers)
+if os.name == "nt":
+    TEMP_AUDIO_DIR = os.path.join(BASE_DIR, "temp_audio")
+else:
+    TEMP_AUDIO_DIR = "/tmp/temp_audio"
+
 os.makedirs(TEMP_AUDIO_DIR, exist_ok=True)
 
 TEMPLATES_DIR = os.path.join(BASE_DIR, "templates")
@@ -96,5 +100,6 @@ async def stream_audio_response():
 
 
 if __name__ == "__main__":
-    print("\n🚀 Starting Multi-Turn WhisperFlow Voice Assistant on http://127.0.0.1:8000 ...")
-    uvicorn.run("app:app", host="127.0.0.1", port=8000, reload=True)
+    port = int(os.environ.get("PORT", 8000))
+    print(f"\n🚀 Starting Assistant on http://0.0.0.0:{port} ...")
+    uvicorn.run("app:app", host="0.0.0.0", port=port, reload=False)
