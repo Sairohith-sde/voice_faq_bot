@@ -77,16 +77,17 @@ async def handle_text_query(data: TextQueryRequest):
             history=data.history
         )
 
-        # Step 4: Neural TTS Audio Synthesis
+        # Step 4: Neural TTS Audio Synthesis (In-memory for Serverless Vercel & Fast Delivery)
         tts.voice = data.voice
-        await tts.synthesize_async(answer, filename="response.mp3")
+        audio_base64 = await tts.synthesize_to_base64_async(answer)
 
         return JSONResponse({
             "transcript": raw_question,
             "cleaned_query": cleaned_query,
             "answer": answer,
             "retrieved_context": context_chunks,
-            "audio_url": "/api/audio"
+            "audio_url": audio_base64,
+            "audio_base64": audio_base64
         })
     except Exception as e:
         return JSONResponse({"error": str(e)}, status_code=500)

@@ -414,8 +414,9 @@
         playChime('ready');
         statusMsg.innerText = 'Spoken answer ready! Click mic to ask a follow-up question.';
 
-        if (data.audio_url) {
-          audioPlayer.src = data.audio_url + '?t=' + Date.now();
+        const audioSrc = data.audio_base64 || data.audio_url;
+        if (audioSrc) {
+          audioPlayer.src = audioSrc.startsWith('data:') ? audioSrc : (audioSrc + '?t=' + Date.now());
           audioPlayerContainer.classList.remove('hidden');
           audioPlayer.play().catch(e => console.log('Autoplay blocked:', e));
         }

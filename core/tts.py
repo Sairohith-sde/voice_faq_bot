@@ -21,6 +21,26 @@ class TextToSpeechEngine:
         self.output_dir = output_dir
         os.makedirs(self.output_dir, exist_ok=True)
 
+    async def synthesize_to_base64_async(self, text: str) -> str:
+        """Synthesizes speech audio in-memory and returns base64 data URL (zero disk writes, 100% serverless)."""
+        if not text or not text.strip():
+            raise ValueError("Text to synthesize cannot be empty.")
+
+        communicate = edge_tts.Communicate(
+            text=text,
+            voice=self.voice,
+            rate="-3%",
+            pitch="+0Hz"
+        )
+        audio_bytes = bytearray()
+        async for chunk in communicate.stream():
+            if chunk["type"] == "audio":
+                audio_bytes.extend(chunk["data"])
+
+        import base64
+        b64_data = base64.b64encode(audio_bytes).decode("utf-8")
+        return f"data:audio/mp3;base64,{b64_data}"
+
     async def synthesize_async(self, text: str, filename: Optional[str] = None) -> str:
         """Asynchronously generates speech audio with articulate, professional pacing."""
         if not text or not text.strip():
