@@ -419,6 +419,12 @@
           audioPlayer.src = audioSrc.startsWith('data:') ? audioSrc : (audioSrc + '?t=' + Date.now());
           audioPlayerContainer.classList.remove('hidden');
           audioPlayer.play().catch(e => console.log('Autoplay blocked:', e));
+        } else if (window.speechSynthesis && data.answer) {
+          // Fallback to browser Web Speech API voice synthesis if neural cloud audio is temporarily restricted
+          const utterance = new SpeechSynthesisUtterance(data.answer);
+          utterance.rate = 1.0;
+          utterance.pitch = 1.0;
+          window.speechSynthesis.speak(utterance);
         }
 
       } catch (err) {
